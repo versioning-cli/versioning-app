@@ -1,8 +1,6 @@
 name: Package Deployment
 
 on:
-  push:
-    branches: [ main ]
   pull_request:
     branches: [ main ]
 
@@ -34,4 +32,8 @@ jobs:
       - name: Install dependencies
         run: dart pub get
       - name: Build
-        run: dart compile exe bin/app.dart -o versioning.exe
+        run: ./build.sh
+      - name: Publish on Releases
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+        run: ./deploy.sh
