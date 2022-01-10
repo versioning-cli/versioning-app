@@ -76,6 +76,9 @@ class DartPlugin extends Plugin {
       ),
       'version: $version',
     );
+    if (verbose == true) {
+      ConsoleUtils.printVerbose('Updating version on pubspec.yaml');
+    }
     await pubspecFile.writeAsString(
       contentReplaced,
       mode: FileMode.writeOnly,

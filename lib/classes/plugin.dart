@@ -27,20 +27,14 @@ abstract class Plugin {
   Future<void> setVersion(Version version);
 
   Future<String?> _runCommand(String executable, List<String> args,
-      {Function(String?)? onError}) async {
+      {Function(String, int)? onError}) async {
     if (verbose) {
       ConsoleUtils.printVerbose('$executable ${args.join(' ')}');
     }
     ProcessResult result = await Process.run(executable, args);
     if (result.exitCode != 0) {
-      ConsoleUtils.printError(
-          'An error has occurred while checking git status');
-      if (verbose == true) {
-        ConsoleUtils.printError('Git exit code: ${result.exitCode}');
-        ConsoleUtils.printError(result.stderr.toString());
-        if (onError != null) {
-          onError(result.stderr);
-        }
+      if (onError != null) {
+        onError(result.stderr.toString(), result.exitCode);
       }
       return null;
     } else {
@@ -49,7 +43,8 @@ abstract class Plugin {
   }
 
   Future<bool?> _existsGitTag(Version version) async {
-    String? result = await _runCommand('git', ['tag', '-l', 'v$version']);
+    String? result = await _runCommand('git', ['tag', '-l', 'v$version'],
+        onError: (String error, int exitCode) {});
     if (result != null) {
       return result.trim() == 'v$version';
     } else {
@@ -58,33 +53,34 @@ abstract class Plugin {
   }
 
   Future<bool?> _hasGitChanges() async {
-    ProcessResult result = await Process.run('git', ['status', '--short']);
-    if (result.exitCode == 0) {
-      return result.stdout.toString().trim().isNotEmpty;
-    } else {
+    String? result = await _runCommand('git', ['status', '--short'],
+        onError: (String error, int exitCode) {
       ConsoleUtils.printError(
           'An error has occurred while checking git status');
       if (verbose == true) {
-        ConsoleUtils.printError('Git exit code: ${result.exitCode}');
-        ConsoleUtils.printError(result.stderr.toString());
+        ConsoleUtils.printError('Git exit code: $exitCode');
+        ConsoleUtils.printError(error);
       }
-      return null;
+    });
+    if (result != null) {
+      return result.trim().isNotEmpty;
     }
   }
 
   Future<void> _createGitTag(Version previous, Version next) async {
-    ProcessResult result = await Process.run(
-        'git', ['tag', '-a', 'v$next', '-m', 'release v$next']);
-    if (result.exitCode == 0) {
-      ConsoleUtils.printSuccess("Version $next released");
-    } else {
+    String? result = await _runCommand(
+        'git', ['tag', '-a', 'v$next', '-m', 'release v$next'],
+        onError: (String error, int exitCode) async {
       ConsoleUtils.printError(
           'An error has occurred while creating the git tag. Trying to revert changes');
       if (verbose == true) {
-        ConsoleUtils.printError('Git exit code: ${result.exitCode}');
-        ConsoleUtils.printError(result.stderr.toString());
+        ConsoleUtils.printError('Git exit code: $exitCode');
+        ConsoleUtils.printError(stderr.toString());
       }
       await setVersion(previous);
+    });
+    if (result != null) {
+      ConsoleUtils.printSuccess("Version $next released");
     }
   }
 
@@ -138,10 +134,14 @@ abstract class Plugin {
     await _runCommand(
       'git',
       ['commit', '-m', "release: new release v$next"],
-      onError: (String? error) async {
+      onError: (String error, int exitCode) async {
         ConsoleUtils.printError(
           'An error occurred while commiting changes. Trying to revert changes',
         );
+        if (verbose == true) {
+          ConsoleUtils.printError('Git exit code: $exitCode');
+          ConsoleUtils.printError(stderr.toString());
+        }
         _runCommand('git', ['rm', '-r', "*"]);
         await setVersion(previous);
       },
