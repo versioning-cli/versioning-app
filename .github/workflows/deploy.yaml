@@ -9,7 +9,7 @@ on:
 jobs:
   build:
   runs-on: windows-latest
-    timeout-minutes: 5
+  timeout-minutes: 5
   steps:
     - uses: versioning-cli/versioning-app/.github/workflows/analyze.yaml@main
     - name: Build
