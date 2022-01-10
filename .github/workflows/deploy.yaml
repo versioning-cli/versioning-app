@@ -1,8 +1,6 @@
 name: Package Deployment
 
 on:
-  push:
-    branches: [ main ]
   pull_request:
     branches: [ main ]
 
@@ -35,3 +33,7 @@ jobs:
         run: dart pub get
       - name: Build
         run: dart compile exe bin/app.dart -o versioning.exe
+      - name: Publish on Releases
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+        run: "gh release create $(grep 'version:' pubspec.yaml | sed -E 's/version: (\b[0-9].\b[0-9].\b[0-9])/\1/') -d ./versioning.exe"
