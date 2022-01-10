@@ -7,7 +7,54 @@ class Version {
     required this.major,
     required this.minor,
     required this.patch,
-  });
+  }) {
+    if (major < 0 || minor < 0 || patch < 0) {
+      throw Exception('Invalid major version. Please use positive integers');
+    }
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (other is Version) {
+      return other.major == major &&
+          other.minor == minor &&
+          other.patch == patch;
+    } else {
+      return other.hashCode == hashCode;
+    }
+  }
+
+  bool operator >(Version other) {
+    if (major > other.major) {
+      return true;
+    } else if (major == other.major && minor > other.minor) {
+      return true;
+    } else if (major == other.major &&
+        minor == other.minor &&
+        patch > other.patch) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  bool operator <(Version other) {
+    if (major < other.major) {
+      return true;
+    } else if (major == other.major && minor < other.minor) {
+      return true;
+    } else if (major == other.major &&
+        minor == other.minor &&
+        patch < other.patch) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  operator &(Version other) {
+    throw Exception('Invalid operation on Version');
+  }
 
   @override
   String toString() {
@@ -33,4 +80,7 @@ class Version {
   }
 
   static Version none = Version(major: 0, minor: 0, patch: 0);
+
+  @override
+  int get hashCode => toString().hashCode;
 }
