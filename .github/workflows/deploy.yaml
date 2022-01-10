@@ -8,9 +8,10 @@ on:
 
 jobs:
   build:
-  runs-on: windows-latest
-  timeout-minutes: 5
-  steps:
-    - uses: versioning-cli/versioning-app/.github/workflows/analyze.yaml@main
-    - name: Build
-        run: dart compile exe bin/app.dart -o versioning.exe
+    runs-on: windows-latest
+    timeout-minutes: 5
+
+    steps:
+      - uses: versioning-cli/versioning-app/.github/workflows/analyze.yaml@main
+      - name: Build
+          run: dart compile exe bin/app.dart -o versioning.exe
