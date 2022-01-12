@@ -42,6 +42,15 @@ abstract class Plugin {
     }
   }
 
+  Future<bool?> _isGitInstalled() async {
+    String? result = await _runCommand('git', ['--version']);
+    if (result != null) {
+      return RegExp(r'^git version (\d|\w|\.)+$').hasMatch(result);
+    } else {
+      return null;
+    }
+  }
+
   Future<bool?> _existsGitTag(Version version) async {
     String? result = await _runCommand('git', ['tag', '-l', 'v$version'],
         onError: (String error, int exitCode) {});
@@ -104,6 +113,14 @@ abstract class Plugin {
     }
 
     if (git == true) {
+      bool? gitInstalled = await _isGitInstalled();
+
+      if (gitInstalled == null || gitInstalled == false) {
+        ConsoleUtils.printError(
+            'Git is not installed or is not available on PATH');
+        return;
+      }
+
       bool? gitChanges = await _hasGitChanges();
       if (gitChanges != null) {
         if (gitChanges == true) {
