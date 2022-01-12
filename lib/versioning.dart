@@ -2,6 +2,8 @@ import 'dart:io';
 
 import 'package:path/path.dart';
 
+const version = 'APP_VERSION';
+
 List<FileSystemEntity> getEntries() => Directory.current.listSync();
 
 List<String> getFiles() {
